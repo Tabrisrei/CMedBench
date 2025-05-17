@@ -2,8 +2,6 @@ import os
 from time import time
 from trustllm.generation.generation import LLMGeneration
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 tik = time()
 print(f"start time: {tik}")
 

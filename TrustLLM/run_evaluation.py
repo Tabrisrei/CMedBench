@@ -1,7 +1,6 @@
 import os
 from time import time
 from trustllm import config
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 # from trustllm.evaluation import run_evaluation
 from trustllm.task.pipeline import run_truthfulness, run_safety, run_fairness, run_robustness, run_privacy, run_ethics
 

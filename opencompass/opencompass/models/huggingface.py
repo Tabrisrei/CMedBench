@@ -11,59 +11,6 @@ from opencompass.registry import MODELS
 from opencompass.utils.logging import get_logger
 from opencompass.utils.prompt import PromptList
 
-try:
-    from llmc.compression.quantization import *
-    from llmc.compression.sparsification import *
-    from llmc.models import *
-    from llmc.utils.registry_factory import ALGO_REGISTRY, MODEL_REGISTRY
-except Exception:
-    # pring current file path
-    print(f"current file path: {os.path.abspath(__file__)}")
-    print("\n\n\n\n\n\nIf you want to eval llmc models, you should add llmc to PYTHONPATH.\n\n\n\n\n\n")
-
-
-# def check_fake_quant(model):
-#     print("="*40)
-#     print("🔍 检查模型是否为 Fake Quant 模式")
-
-#     # 任选一层线性层
-#     linear_layer = None
-
-#     for name, module in model.named_modules():
-#         if isinstance(module, torch.nn.Linear):
-#             linear_layer = module
-#             print(f"[INFO] 找到 Linear 层: {name}")
-#             break
-
-#     if linear_layer is None:
-#         print("❌ 没有找到 Linear 层，模型结构不符")
-#         return
-
-#     # 检查 class 名字
-#     cls_name = linear_layer.__class__.__name__
-#     print(f"[INFO] 该 Linear 层类型: {cls_name}")
-
-#     # 检查权重 dtype
-#     weight = linear_layer.weight.data
-#     print(f"[INFO] 权重 dtype: {weight.dtype}")
-#     print(f"[INFO] 权重 device: {weight.device}")
-#     print(f"[INFO] 权重样本值（前10个）: {weight.view(-1)[:10].tolist()}")
-
-#     # 计算唯一值个数
-#     unique_vals = torch.unique(weight.view(-1)).numel()
-#     total_vals = weight.numel()
-#     ratio = unique_vals / total_vals
-#     print(f"[INFO] 权重唯一值个数: {unique_vals}, 总数: {total_vals}, 占比: {ratio:.6f}")
-
-#     # 判断是否量化（假设低比重唯一值表示 fake quant）
-#     if ratio < 0.05:
-#         print("✅ 该模型看起来像是 fake quant 模型")
-#     else:
-#         print("⚠️ 该模型看起来不像 fake quant，可能没有 deploy 成功")
-
-#     print("="*40)
-
-
 PromptType = Union[PromptList, str]
 
 
@@ -186,10 +133,6 @@ class HuggingFace(BaseModel):
         from transformers import AutoTokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(
             tokenizer_path if tokenizer_path else path, **tokenizer_kwargs)
-        print(f'Loading tokenizer from {path} or {tokenizer_path}')
-        # print(f'Tokenizer: {self.tokenizer}')
-        print(f'Tokenizer kwargs: {tokenizer_kwargs}')
-        print(f'path: {path}')
         # A patch for some models without pad_token_id
         if self.pad_token_id is not None:
             if self.pad_token_id < 0:
@@ -732,123 +675,16 @@ class HuggingFaceCausalLM(HuggingFace):
                     path: str,
                     model_kwargs: dict,
                     peft_path: Optional[str] = None):
-        print("start to load model...")
-        # print(f"model_kwargs : {model_kwargs}")
-        if 'is_quant' not in model_kwargs:
-            print("using origin opencompass")
-            from transformers import AutoModelForCausalLM
-            print(f'path: {path}')
-            print(f'model_kwargs: {model_kwargs}')
-            print(f'peft_path: {peft_path}')
-            self._set_model_kwargs_torch_dtype(model_kwargs)
-            self.model = AutoModelForCausalLM.from_pretrained(path, **model_kwargs)
-            if peft_path is not None:
-                from peft import PeftModel
-                self.model = PeftModel.from_pretrained(self.model,
-                                                    peft_path,
-                                                    is_trainable=False)
-            self.model.eval()
-            self.model.generation_config.do_sample = False
-        else:
-            # assert 'is_quant' in model_kwargs
-            print(f"kwargs : {model_kwargs}")
-            if model_kwargs['is_quant']:
-                print("is_quant is True")
-                print(f'path: {path}')
-                print(f'model_kwargs: {model_kwargs}')
-                model = MODEL_REGISTRY[model_kwargs['model']["type"]](
-                    # path,
-                    # model_kwargs['model']["torch_dtype"], 
-                    model_kwargs,
-                    device_map="auto", 
-                    use_cache=True
-                    )
-                print(f"model.model : {model.model}")
-                print(f"model_kwargs: {model_kwargs}")
-                try:
-                    compression_method = model_kwargs["quant"]["method"]
-                    compression_config = model_kwargs["quant"]
-                    blockwise_opt = ALGO_REGISTRY[compression_method](
-                        model, 
-                        quant_config=compression_config, 
-                        input=None, 
-                        padding_mask=None,
-                        config=model_kwargs
-                        )
-                except:
-                    compression_method = model_kwargs["sparse"]["method"]
-                    compression_config = model_kwargs["sparse"]
-                    blockwise_opt = ALGO_REGISTRY[compression_method](
-                        model, 
-                        sparsity_config=compression_config, 
-                        input=None, 
-                        padding_mask=None,
-                        config=model_kwargs
-                        )
-                
-                blockwise_opt.deploy('fake_quant', True)
-                # print("==================================================================================================================")
-                print("[BEFORE DEPLOY]")
-                for name, p in model.model.named_parameters():
-                    print(f"{name}: {p.dtype}, mean={p.mean().item():.4f}, std={p.std().item():.4f}")
-
-                # # print(f"[DEBUG] model.model id: {id(model.model)}")
-                # # print(f"[DEBUG] self.model id before assign: {id(self.model)}")
-                # # blockwise_opt.deploy('fake_quant', True)
-                # # print(f"[DEBUG] self.model id after deploy: {id(model.model)}")
-
-                # print(f"[DEBUG] model.model id: {id(model.model)}")
-                # print(f"[DEBUG] self.model id before assign: {id(self.model) if hasattr(self, 'model') else 'Not assigned yet'}")
-
-                print(f"[DEBUG] model.model id before deploy: {id(model.model)}")
-                print(">>> Calling deploy now...")
-
-
-                print(f"[DEBUG] model.model id after deploy: {id(model.model)}")
-                # check_fake_quant(model.model)
-
-
-                # print(f"[DEBUG] model.model id after deploy: {id(model.model)}")
-
-                # # assign to self.model
-                # self.model = model.model
-                # print(f"[DEBUG] self.model id after assign: {id(self.model)}")
-
-
-                print("[AFTER DEPLOY]")
-                for name, p in model.model.named_parameters():
-                    print(f"{name}: {p.dtype}, mean={p.mean().item():.4f}, std={p.std().item():.4f}")
-                # print("==================================================================================================================")
-                # blockwise_opt.deploy('fake_quant', True)
-                self.model = model.model    
-                for name, param in self.model.named_parameters():
-                    # print(f"{name} - dtype: {param.dtype}")
-                    # if "self_attn.q_proj" in name:  # 选择注意力层权重
-                    #     print(f"{name}: mean={param.mean().item()}, std={param.std().item()}")
-                    if param.device != torch.device('cuda'):
-                        print(f"[PARAM NOT ON GPU] {name} is on {param.device}")
-                        param.data = param.data.to('cuda')
-
-                for name, buffer in self.model.named_buffers():
-                    if buffer.device != torch.device('cuda'):
-                        print(f"[BUFFER NOT ON GPU] {name} is on {buffer.device}")
-                        buffer.data = buffer.data.to('cuda')
-
-                self.model.eval()
-                self.model.generation_config.do_sample = False
-            else:
-                print("is_quant is False")
-                model = MODEL_REGISTRY[model_kwargs['model']["type"]](
-                        path, 
-                        model_kwargs['model']["torch_dtype"], 
-                        device_map="auto", 
-                        use_cache=True)
-                print(f"model.model : {model.model}")
-                self.model = model.model
-
-                self.model.eval()
-                self.model.generation_config.do_sample = False
-        print(f"opencompass self.model : {self.model}")
+        from transformers import AutoModelForCausalLM
+        self._set_model_kwargs_torch_dtype(model_kwargs)
+        self.model = AutoModelForCausalLM.from_pretrained(path, **model_kwargs)
+        if peft_path is not None:
+            from peft import PeftModel
+            self.model = PeftModel.from_pretrained(self.model,
+                                                peft_path,
+                                                is_trainable=False)
+        self.model.eval()
+        self.model.generation_config.do_sample = False
 
 
 class HuggingFaceChatGLM3(HuggingFace):
