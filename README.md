@@ -1,6 +1,6 @@
 
 # CMedBench: Evaluating LLM Compression Impact on Medical Applications
-
+![Overview](figs/Overview.jpg)
 ## Introduction
 
 The **C**ompressed **Med**ical LLM **Bench**mark (CMedBench) is a comprehensive benchmark designed to evaluate the performance of compressed large language models (LLMs) in medical applications. It provides an in-depth analysis across multiple tracks to assess model efficiency, accuracy, and trustworthiness in medical contexts.
@@ -33,8 +33,10 @@ pip install vllm pynvml
    ```bash
    python PycrawlersDownload.py
    ```
+Tips: None of the mmlu dataset in huggingface is correctly parsed, so we use opencompass dataset reader.
+Please download the dataset from https://people.eecs.berkeley.edu/~hendrycks/data.tar
 
-3. Alternatively, download the dataset zip file from the GitHub repository and unzip it in the project folder to access Track 1, 2, and 4 datasets.
+3. Alternatively, download the dataset zip file from our GitHub repository and unzip it in the project folder to access Track 1, 2, and 4 datasets.
 
 ### Track 3
 
@@ -53,7 +55,7 @@ This repository includes scripts to evaluate LLMs across five tracks. Ensure the
 1. Update the dataset and model paths in the configuration file:
 
    ```
-   opencompass/configs/aformalexperiments_unique
+   opencompass/configs/xperiments
    ```
 
 2. Modify the log and result paths in:
@@ -65,8 +67,8 @@ This repository includes scripts to evaluate LLMs across five tracks. Ensure the
 3. Run the evaluation:
 
    ```bash
-   cd opencompass/scripts
-   bash launcher.sh
+   cd opencompass
+   bash scripts/launcher.sh
    ```
 
 ### Testing Track 3

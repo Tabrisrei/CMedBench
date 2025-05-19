@@ -1,13 +1,9 @@
-from mmengine.config import read_base
 from opencompass.openicl.icl_prompt_template import PromptTemplate
 from opencompass.openicl.icl_retriever import ZeroRetriever, FixKRetriever
 from opencompass.openicl.icl_inferencer import GenInferencer, PPLInferencer
 from opencompass.openicl.icl_evaluator import AccEvaluator, AccwithDetailsEvaluator
 from opencompass.datasets import MedExQADataset
 from opencompass.utils.text_postprocessors import match_answer_pattern, first_option_postprocess
-
-# None of the mmlu dataset in huggingface is correctly parsed, so we use our own dataset reader
-# Please download the dataset from https://people.eecs.berkeley.edu/~hendrycks/data.tar
 
 medexqa_all_sets = [
     'biomedical_engineer',
@@ -45,7 +41,7 @@ for _name in medexqa_all_sets:
         dict(
             abbr=f'medexqa_{_name}',
             type=MedExQADataset,
-            path='/home/gsb/opencompass/adatasets/meddata/bluesky333/MedExQA',
+            path='/root/path/to/datasets/meddata/bluesky333/MedExQA',
             name=_name,
             reader_cfg=medexqa_reader_cfg,
             infer_cfg=medexqa_infer_cfg,

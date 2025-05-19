@@ -6,9 +6,6 @@ from opencompass.openicl.icl_evaluator import AccEvaluator, AccwithDetailsEvalua
 from opencompass.datasets import PubMedQADataset                                
 from opencompass.utils.text_postprocessors import match_answer_pattern, first_option_postprocess
 
-# None of the mmlu dataset in huggingface is correctly parsed, so we use our own dataset reader
-# Please download the dataset from https://people.eecs.berkeley.edu/~hendrycks/data.tar
-
 pubmedqa_reader_cfg = dict(
     input_columns=['input', 'A', 'B', 'C'],
     output_column='target',
@@ -37,7 +34,7 @@ pubmedqa_datasets.append(
     dict(
         abbr=f'pubmedqa',
         type=PubMedQADataset,
-        path='/home/gsb/opencompass/adatasets/meddata/qiaojin/PubMedQA/pqa_labeled',
+        path='/root/path/to/datasets/meddata/qiaojin/PubMedQA/pqa_labeled',
         name='pubmedqa',
         reader_cfg=pubmedqa_reader_cfg,
         infer_cfg=pubmedqa_infer_cfg,

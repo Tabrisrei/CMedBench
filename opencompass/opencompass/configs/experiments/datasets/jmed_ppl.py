@@ -1,4 +1,3 @@
-from mmengine.config import read_base
 from opencompass.openicl.icl_prompt_template import PromptTemplate
 from opencompass.openicl.icl_retriever import ZeroRetriever, FixKRetriever
 from opencompass.openicl.icl_inferencer import GenInferencer, PPLInferencer
@@ -6,14 +5,9 @@ from opencompass.openicl.icl_evaluator import AccEvaluator, AccwithDetailsEvalua
 from opencompass.datasets import JMEDDataset
 from opencompass.utils.text_postprocessors import match_answer_pattern, first_option_postprocess
 
-# None of the mmlu dataset in huggingface is correctly parsed, so we use our own dataset reader
-# Please download the dataset from https://people.eecs.berkeley.edu/~hendrycks/data.tar
-
 jmed_reader_cfg = dict(
     input_columns=['input', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U'],
     output_column='target',
-    # train_split='dev',
-    # test_split='test',
     )
 
 jmed_datasets = []
@@ -55,7 +49,7 @@ jmed_datasets.append(
     dict(
         abbr=f'jmed',
         type=JMEDDataset,
-        path='/home/gsb/opencompass/adatasets/meddata/jdh-algo/JMED',
+        path='/root/path/to/datasets/meddata/jdh-algo/JMED',
         name='jmed_en',
         reader_cfg=jmed_reader_cfg,
         infer_cfg=jmed_infer_cfg,
