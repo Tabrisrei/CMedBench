@@ -92,7 +92,7 @@ docs/en/_build/
 docs/zh_cn/_build/
 
 # .zip
-*.zip
+# *.zip
 
 # sft config ignore list
 configs/sft_cfg/*B_*
